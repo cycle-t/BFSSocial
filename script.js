@@ -208,6 +208,8 @@ let playing = false;
 let hoverNode = null;
 let selectedNodeId = startNode;
 let linkDraftId = null;
+let dragState = null;
+let suppressClick = false;
 let cssWidth = 0;
 let cssHeight = 0;
 let nodeRadius = 28;
@@ -1041,6 +1043,10 @@ function checkQuiz(choiceKey, answerKey) {
 }
 
 function renderCanvasHint() {
+  if (dragState?.started) {
+    canvasHint.textContent = `正在拖动 ${nodeName(dragState.nodeId)}，松开后会保留当前位置。`;
+    return;
+  }
   if (linkDraftId) {
     canvasHint.textContent = `已选中 ${nodeName(linkDraftId)}，继续 Shift+单击另一个节点即可创建关系。`;
     return;
@@ -1049,7 +1055,7 @@ function renderCanvasHint() {
     canvasHint.textContent = `当前选中 ${nodeName(selectedNodeId)}。你可以在右侧把它设为人物 A 或人物 B。`;
     return;
   }
-  canvasHint.textContent = "单击节点查看详情；Shift+单击两个节点创建关系；双击空白区域添加新人物。";
+  canvasHint.textContent = "拖动节点可调整位置；单击查看详情；Shift+单击两个节点创建关系；双击空白区域添加新人物。";
 }
 
 function gradeExercises() {
@@ -1483,6 +1489,35 @@ function pointerPosition(event) {
   };
 }
 
+function updateNodePosition(node, point) {
+  const normalized = toNormalizedPosition(point);
+  node.x = normalized.x;
+  node.y = normalized.y;
+}
+
+function finishNodeDrag(event) {
+  if (!dragState || (event && dragState.pointerId !== event.pointerId)) {
+    return;
+  }
+
+  if (canvas.hasPointerCapture?.(dragState.pointerId)) {
+    canvas.releasePointerCapture(dragState.pointerId);
+  }
+
+  const wasDragging = dragState.started;
+  dragState = null;
+  suppressClick = wasDragging;
+
+  const point = event ? pointerPosition(event) : null;
+  const node = point ? nodeAtPoint(point.x, point.y) : null;
+  hoverNode = node ? node.id : null;
+  canvas.style.cursor = node ? (event?.shiftKey ? "crosshair" : "pointer") : "default";
+
+  if (wasDragging) {
+    updateUI();
+  }
+}
+
 function edgeExists(fromId, toId) {
   return graph.edges.some(([left, right]) => edgeKey(left, right) === edgeKey(fromId, toId));
 }
@@ -1547,17 +1582,85 @@ function advanceIfPlaying(now) {
 
 canvas.addEventListener("pointermove", (event) => {
   const point = pointerPosition(event);
+
+  if (dragState && dragState.pointerId === event.pointerId) {
+    const node = getNode(dragState.nodeId);
+    if (!node) {
+      finishNodeDrag(event);
+      return;
+    }
+
+    const moved = Math.hypot(point.x - dragState.startPoint.x, point.y - dragState.startPoint.y);
+    if (!dragState.started && moved >= 6) {
+      dragState.started = true;
+      linkDraftId = null;
+      graph.modified = true;
+      updateUI();
+    }
+
+    if (dragState.started) {
+      updateNodePosition(node, {
+        x: point.x + dragState.offset.x,
+        y: point.y + dragState.offset.y
+      });
+      hoverNode = node.id;
+      canvas.style.cursor = "grabbing";
+    }
+    return;
+  }
+
   const node = nodeAtPoint(point.x, point.y);
   hoverNode = node ? node.id : null;
   canvas.style.cursor = node ? (event.shiftKey ? "crosshair" : "pointer") : "default";
 });
 
 canvas.addEventListener("pointerleave", () => {
+  if (dragState?.started) {
+    return;
+  }
   hoverNode = null;
   canvas.style.cursor = "default";
 });
 
+canvas.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || event.shiftKey) {
+    return;
+  }
+
+  const point = pointerPosition(event);
+  const node = nodeAtPoint(point.x, point.y);
+  if (!node) {
+    return;
+  }
+
+  const position = getNodePosition(node);
+  dragState = {
+    nodeId: node.id,
+    pointerId: event.pointerId,
+    startPoint: point,
+    offset: {
+      x: position.x - point.x,
+      y: position.y - point.y
+    },
+    started: false
+  };
+  selectedNodeId = node.id;
+  linkDraftId = null;
+  hoverNode = node.id;
+  canvas.style.cursor = "grab";
+  canvas.setPointerCapture?.(event.pointerId);
+  updateUI();
+});
+
+canvas.addEventListener("pointerup", finishNodeDrag);
+canvas.addEventListener("pointercancel", finishNodeDrag);
+
 canvas.addEventListener("click", (event) => {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
+
   const point = pointerPosition(event);
   const node = nodeAtPoint(point.x, point.y);
 
