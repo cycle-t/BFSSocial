@@ -177,6 +177,25 @@ const resetBtn = document.querySelector("#resetBtn");
 const graphBtn = document.querySelector("#graphBtn");
 const restoreBtn = document.querySelector("#restoreBtn");
 const speedRange = document.querySelector("#speedRange");
+const screens = Array.from(document.querySelectorAll(".screen"));
+const stageLinks = Array.from(document.querySelectorAll(".stage-link"));
+const screenButtons = Array.from(document.querySelectorAll("[data-screen-target]"));
+const loadingPercent = document.querySelector("#loadingPercent");
+const loadingStatus = document.querySelector("#loadingStatus");
+const loadingBar = document.querySelector("#loadingBar");
+const exerciseCards = Array.from(document.querySelectorAll(".exercise-card"));
+const gradeQuizBtn = document.querySelector("#gradeQuizBtn");
+const resetExerciseBtn = document.querySelector("#resetExerciseBtn");
+const exerciseResult = document.querySelector("#exerciseResult");
+
+const screenOrder = ["loading", "principle", "demo", "exercise", "feedback"];
+const loadingStages = [
+  { upTo: 15, text: "正在初始化课程结构..." },
+  { upTo: 35, text: "正在载入 BFS 原理讲解模块..." },
+  { upTo: 60, text: "正在联调场景演示与动画画布..." },
+  { upTo: 82, text: "正在同步课后习题与评分逻辑..." },
+  { upTo: 100, text: "课程准备完成，可以进入学习。" }
+];
 
 let graphIndex = 0;
 let graph = cloneGraph(graphTemplates[graphIndex]);
@@ -197,6 +216,8 @@ let lastAdvanceAt = performance.now();
 let quizStep = -1;
 let quizMessage = "";
 let quizGood = false;
+let activeScreen = "loading";
+let loadingProgress = 0;
 
 function cloneGraph(template) {
   return {
@@ -283,6 +304,59 @@ function snapshot(payload) {
 function captureState(payload) {
   const candidatePath = targetNode in payload.parent ? reconstructPath(payload.parent, targetNode) : [];
   return snapshot({ ...payload, candidatePath });
+}
+
+function setLoadingState(progress) {
+  loadingProgress = Math.max(0, Math.min(progress, 100));
+  loadingPercent.textContent = `${loadingProgress}%`;
+  loadingBar.style.width = `${loadingProgress}%`;
+
+  const stage = loadingStages.find((item) => loadingProgress <= item.upTo) || loadingStages[loadingStages.length - 1];
+  loadingStatus.textContent = stage.text;
+}
+
+function startLoadingSequence() {
+  setLoadingState(0);
+
+  const timer = window.setInterval(() => {
+    const increment = loadingProgress < 35 ? 7 : loadingProgress < 82 ? 9 : 6;
+    const nextProgress = Math.min(100, loadingProgress + increment);
+    setLoadingState(nextProgress);
+
+    if (nextProgress >= 100) {
+      window.clearInterval(timer);
+    }
+  }, 180);
+}
+
+function showScreen(name) {
+  if (!screenOrder.includes(name)) {
+    return;
+  }
+
+  if (name !== "demo" && playing) {
+    pausePlayback();
+  }
+
+  activeScreen = name;
+  document.body.dataset.screen = name;
+
+  screens.forEach((screen) => {
+    screen.classList.toggle("screen-active", screen.dataset.screen === name);
+  });
+
+  stageLinks.forEach((link) => {
+    link.classList.toggle("active", link.dataset.screenTarget === name);
+  });
+
+  window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+
+  if (name === "demo") {
+    requestAnimationFrame(() => {
+      resizeCanvas();
+      updateUI();
+    });
+  }
 }
 
 function createSteps(graphData, start, target) {
@@ -978,6 +1052,64 @@ function renderCanvasHint() {
   canvasHint.textContent = "单击节点查看详情；Shift+单击两个节点创建关系；双击空白区域添加新人物。";
 }
 
+function gradeExercises() {
+  let answered = 0;
+  let correct = 0;
+
+  exerciseCards.forEach((card) => {
+    card.classList.remove("correct", "incorrect", "unanswered");
+    const selected = card.querySelector('input[type="radio"]:checked');
+    const feedback = card.querySelector(".exercise-feedback");
+    const explanation = card.dataset.explanation;
+    const answerText = card.dataset.answerText;
+
+    if (!selected) {
+      card.classList.add("unanswered");
+      feedback.textContent = "这题还没有作答，可以先根据队列、层级和去重逻辑再判断一次。";
+      return;
+    }
+
+    answered += 1;
+    if (selected.value === card.dataset.answer) {
+      correct += 1;
+      card.classList.add("correct");
+      feedback.textContent = `回答正确。${explanation}`;
+      return;
+    }
+
+    card.classList.add("incorrect");
+    feedback.textContent = `回答不正确，正确答案是：${answerText}。${explanation}`;
+  });
+
+  const total = exerciseCards.length;
+  const unanswered = total - answered;
+
+  if (unanswered > 0) {
+    exerciseResult.textContent = `当前已答 ${answered}/${total} 题，答对 ${correct} 题。还有 ${unanswered} 题未完成，补齐后会更适合做课堂测评。`;
+    return;
+  }
+
+  exerciseResult.textContent = correct === total
+    ? `本次得分 ${correct}/${total}。四题全部答对，已经可以比较扎实地解释 BFS 的最短路原理。`
+    : `本次得分 ${correct}/${total}。建议回到场景演示界面，再观察队列变化、层级扩散和父节点回溯。`;
+}
+
+function resetExercises() {
+  exerciseCards.forEach((card) => {
+    card.classList.remove("correct", "incorrect", "unanswered");
+    const feedback = card.querySelector(".exercise-feedback");
+    const checked = card.querySelector('input[type="radio"]:checked');
+
+    if (checked) {
+      checked.checked = false;
+    }
+
+    feedback.textContent = "";
+  });
+
+  exerciseResult.textContent = "完成后点击“提交答案”，系统会给出即时评分和解析。";
+}
+
 function syncControls() {
   prevBtn.disabled = stepIndex === 0;
   nextBtn.disabled = stepIndex >= steps.length - 1;
@@ -1041,6 +1173,9 @@ function toNormalizedPosition(point) {
 
 function resizeCanvas() {
   const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) {
+    return;
+  }
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cssWidth = rect.width;
   cssHeight = rect.height;
@@ -1307,9 +1442,20 @@ function drawNodes(step, now) {
 }
 
 function draw(now) {
+  if (activeScreen !== "demo") {
+    requestAnimationFrame(draw);
+    return;
+  }
+
   if (!cssWidth || !cssHeight) {
     resizeCanvas();
   }
+
+  if (!cssWidth || !cssHeight) {
+    requestAnimationFrame(draw);
+    return;
+  }
+
   const step = currentStep();
   ctx.clearRect(0, 0, cssWidth, cssHeight);
   drawBackdrop(now);
@@ -1448,6 +1594,12 @@ canvas.addEventListener("dblclick", (event) => {
   addNodeAt(point);
 });
 
+screenButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    showScreen(button.dataset.screenTarget);
+  });
+});
+
 startSelect.addEventListener("change", (event) => {
   startNode = event.target.value;
   selectedNodeId = startNode;
@@ -1498,6 +1650,8 @@ prevBtn.addEventListener("click", prevStep);
 resetBtn.addEventListener("click", resetTraversal);
 graphBtn.addEventListener("click", () => loadTemplate((graphIndex + 1) % graphTemplates.length));
 restoreBtn.addEventListener("click", () => loadTemplate(graphIndex));
+gradeQuizBtn.addEventListener("click", gradeExercises);
+resetExerciseBtn.addEventListener("click", resetExercises);
 
 speedRange.addEventListener("input", () => {
   lastAdvanceAt = performance.now();
@@ -1505,6 +1659,8 @@ speedRange.addEventListener("input", () => {
 
 window.addEventListener("resize", resizeCanvas);
 
+showScreen(activeScreen);
+startLoadingSequence();
 resizeCanvas();
 rebuildGraphCopy();
 requestAnimationFrame(draw);
