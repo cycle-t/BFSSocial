@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>六度空间 BFS 实操舱</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">BFS</span>
+        <div>
+          <p class="eyebrow">计算机设计大赛 · 微课赛道</p>
+          <h1>六度空间 BFS 实操舱</h1>
+          <p>把“社交网络最短关系链”做成一眼能看懂、一步能跟上的交互式算法实验。</p>
+        </div>
+      </div>
+      <a
+        class="source-link"
+        href="https://pixabay.com/illustrations/data-network-visualization-abstract-9982563/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        参考配图
+      </a>
+    </header>
+
+    <main class="course-main">
+      <section class="hero-panel" aria-label="模块导读">
+        <div class="hero-copy">
+          <p class="eyebrow">实操模块升级版</p>
+          <h2>从“你”出发，BFS 要经过几层关系，才能找到目标人物？</h2>
+          <p>
+            这一页专门服务微课的实操环节。左侧用发光社交网络演示搜索过程，右侧同步展示队列、层级、伪代码和最短关系链，
+            让评委能直观看到 BFS 为什么天然适合解决“六度空间”类问题。
+          </p>
+        </div>
+        <div class="hero-cards">
+          <article class="hero-card">
+            <h3>你会看到什么</h3>
+            <p>节点按层扩散、队列先进先出、父节点回溯路径，以及命中目标时最短链路如何被锁定。</p>
+          </article>
+          <article class="hero-card contrast-card">
+            <h3>BFS 为什么优于 DFS</h3>
+            <p><strong>BFS</strong> 先把近处找完再向外扩，第一条抵达目标的路径就是最短关系链。</p>
+            <p><strong>DFS</strong> 往往一条路走到底再回头，不适合优先寻找无权图中的最短路。</p>
+          </article>
+          <article class="hero-card">
+            <h3>答辩加分点</h3>
+            <p>支持起点终点自定义、单步播放、路径回溯、动态加点连线，既讲算法也展示工程实现能力。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="studio-shell" aria-label="BFS 实操舱">
+        <section class="playground-card" aria-label="社交网络画布">
+          <div class="playground-head">
+            <div>
+              <p class="eyebrow">场景实验</p>
+              <h2 id="graphTitle">校园到周杰伦</h2>
+              <p id="graphNote">选择两个人物，观察 BFS 如何按层扩散并锁定最短关系链。</p>
+            </div>
+            <div class="picker-group">
+              <label class="person-picker">
+                人物 A
+                <select id="startSelect" aria-label="选择起点人物"></select>
+              </label>
+              <label class="person-picker">
+                人物 B
+                <select id="targetSelect" aria-label="选择目标人物"></select>
+              </label>
+            </div>
+          </div>
+
+          <div class="mission-strip">
+            <article class="mission-card">
+              <span class="mini-label">当前任务</span>
+              <strong id="missionText">你 -> 周杰伦</strong>
+              <p id="missionHint">起点和终点可以自由切换，BFS 会重新计算最短关系链。</p>
+            </article>
+            <article class="mission-card">
+              <span class="mini-label">搜索阶段</span>
+              <strong id="phaseText">等待起点入队</strong>
+              <p id="phaseHint">先锁定第 0 层，再一层层向外扩散。</p>
+            </article>
+            <article class="mission-card">
+              <span class="mini-label">最短关系</span>
+              <strong id="degreeText">搜索中</strong>
+              <p id="resultText">目标还没出现，队列会先处理距离更近的那一层。</p>
+            </article>
+          </div>
+
+          <div class="canvas-shell">
+            <canvas id="graphCanvas" aria-label="BFS 社交网络动画"></canvas>
+            <div class="canvas-overlay">
+              <div class="legend" aria-label="颜色说明">
+                <div><span class="swatch swatch-current"></span>当前访问</div>
+                <div><span class="swatch swatch-queued"></span>排队等待</div>
+                <div><span class="swatch swatch-done"></span>已处理完成</div>
+                <div><span class="swatch swatch-target"></span>目标人物</div>
+              </div>
+              <p id="canvasHint" class="canvas-hint">
+                单击节点查看详情；Shift+单击两个节点创建关系；双击空白区域添加新人物。
+              </p>
+            </div>
+          </div>
+
+          <div class="controls" aria-label="播放控制">
+            <button id="playBtn" type="button" class="primary-btn">自动播放</button>
+            <button id="nextBtn" type="button">下一步</button>
+            <button id="prevBtn" type="button">上一步</button>
+            <button id="resetBtn" type="button">重播搜索</button>
+            <button id="graphBtn" type="button">换场景</button>
+            <button id="restoreBtn" type="button">恢复原图</button>
+            <label class="speed-control">
+              播放速度
+              <input id="speedRange" type="range" min="300" max="1400" step="50" value="850">
+            </label>
+          </div>
+        </section>
+
+        <aside class="insight-panel" aria-label="算法状态">
+          <section class="state-block spotlight-block">
+            <p class="eyebrow">步骤解说</p>
+            <p id="statusText" class="status-text">准备把起点放进队列。</p>
+            <div class="metric-row" aria-label="状态计数">
+              <div class="metric-chip">
+                <span>已发现</span>
+                <strong id="seenMetric">0</strong>
+              </div>
+              <div class="metric-chip">
+                <span>已完成</span>
+                <strong id="doneMetric">0</strong>
+              </div>
+              <div class="metric-chip">
+                <span>检查边</span>
+                <strong id="edgeMetric">0</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="state-block" aria-label="队列">
+            <div class="block-head">
+              <h2>队列 Queue</h2>
+              <span class="block-tag">先进先出</span>
+            </div>
+            <ol id="queueList" class="queue-list"></ol>
+          </section>
+
+          <section class="state-block" aria-label="访问顺序">
+            <div class="block-head">
+              <h2>访问顺序</h2>
+              <span class="block-tag">出队即访问</span>
+            </div>
+            <div id="orderList" class="order-list"></div>
+          </section>
+
+          <section class="state-block" aria-label="层级展开">
+            <div class="block-head">
+              <h2>层级展开</h2>
+              <span class="block-tag">由近及远</span>
+            </div>
+            <div id="layerList" class="layer-list"></div>
+          </section>
+
+          <section class="state-block" aria-label="父节点映射">
+            <div class="block-head">
+              <h2>父节点映射</h2>
+              <span class="block-tag">回溯最短路</span>
+            </div>
+            <div id="parentList" class="parent-list"></div>
+          </section>
+
+          <section class="state-block" aria-label="节点详情">
+            <div class="block-head">
+              <h2>节点详情</h2>
+              <span class="block-tag">单击节点切换</span>
+            </div>
+            <div id="nodeDetail" class="node-detail"></div>
+            <div class="detail-actions">
+              <button id="setStartBtn" type="button">设为人物 A</button>
+              <button id="setTargetBtn" type="button">设为人物 B</button>
+            </div>
+          </section>
+
+          <section class="state-block" aria-label="伪代码">
+            <div class="block-head">
+              <h2>核心伪代码</h2>
+              <span class="block-tag">同步高亮</span>
+            </div>
+            <ol class="pseudo-code" id="pseudoCode">
+              <li data-line="1">queue &lt;- [start], seen &lt;- {start}</li>
+              <li data-line="2">parent[start] &lt;- null, dist[start] &lt;- 0</li>
+              <li data-line="3">while queue is not empty</li>
+              <li data-line="4">v &lt;- dequeue(queue)</li>
+              <li data-line="5">if v == target: break</li>
+              <li data-line="6">for each neighbor u of v</li>
+              <li data-line="7">if u not in seen: parent[u]=v; enqueue(u)</li>
+              <li data-line="8">reconstruct path(target, parent)</li>
+            </ol>
+          </section>
+
+          <section class="state-block quiz-block" aria-label="预测练习">
+            <div class="block-head">
+              <h2>预测练习</h2>
+              <span class="block-tag">边看边答</span>
+            </div>
+            <p id="quizQuestion">下一次会从队列里取出谁？</p>
+            <div id="quizChoices" class="quiz-choices"></div>
+            <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
+          </section>
+        </aside>
+      </section>
+
+      <section class="concept-strip" aria-label="模块说明">
+        <article class="concept-card">
+          <h2>为什么它一定最短</h2>
+          <p>只要图是无权图，BFS 第一次碰到目标节点时，对应的层数就是最少边数，回溯父节点即可得到最短链路。</p>
+        </article>
+        <article class="concept-card">
+          <h2>彩蛋交互怎么讲</h2>
+          <p>让评委现场加一个新人物、补一条新连线，最短路径立刻变化，这能直接体现你们不是静态演示，而是真实算法驱动。</p>
+        </article>
+        <article class="concept-card">
+          <h2>工程化展示建议</h2>
+          <p>后续接入 GitHub Actions 自动部署后，就可以在答辩中强调“开发改动一推送，微课页面即自动上线”的持续交付能力。</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
