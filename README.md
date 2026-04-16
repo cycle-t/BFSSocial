@@ -133,9 +133,9 @@ python -m http.server 8000
 
 仓库已包含 GitHub Pages 工作流：
 
-- 工作流文件：`../.github/workflows/deploy.yml`
+- 工作流文件：`.github/workflows/deploy.yml`
 - 触发方式：推送到 `main` 分支，或手动触发
-- 发布目录：`./BFSSocial`
+- 发布目录：`./`
 
 如果仓库启用了 GitHub Pages，页面会自动从该目录部署。
 
