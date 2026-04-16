@@ -540,12 +540,127 @@
               <div class="exercise-level-copy">
                 <span class="difficulty-badge">困难</span>
                 <h3>最后做综合推理</h3>
-                <p>这一层要求学生把“层级、队列、去重、访问顺序”一起用起来，而不是只记一个零散结论。</p>
+                <p>这一层要求学生把“层级、队列、去重、访问顺序”一起用起来，并尝试迁移到经典网格扩散题。</p>
               </div>
-              <p class="exercise-level-note">适合检查是否真正掌握 BFS 思维。</p>
+              <p class="exercise-level-note">适合检查是否真正掌握 BFS 思维与多源 BFS 应用。</p>
             </div>
 
             <div class="exercise-level-grid">
+              <article
+                class="exercise-card exercise-card-case glass-card"
+                data-answer="b"
+                data-answer-text="4 分钟"
+                data-explanation="这是典型的多源 BFS：先把所有初始腐烂橘子同时入队，每处理完当前层就过去 1 分钟。示例里最后一批新鲜橘子会在第 4 分钟腐烂完成。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">困难 · 案例题</p>
+                  <span class="exercise-chip">多源 BFS</span>
+                </div>
+
+                <div class="exercise-case-layout">
+                  <div class="exercise-case-figure" aria-hidden="true">
+                    <div class="exercise-case-icon-shell">
+                      <img src="assets/icon/橘子.svg" alt="" class="exercise-case-icon">
+                    </div>
+                    <p class="exercise-case-tag">腐烂的橘子</p>
+                  </div>
+
+                  <div class="exercise-case-content">
+                    <h3>腐烂的橘子：计算所有新鲜橘子腐烂所需的最小分钟数</h3>
+                    <p class="exercise-case-lead">在给定的 <code>m × n</code> 网格中，<code>0</code> 表示空单元格，<code>1</code> 表示新鲜橘子，<code>2</code> 表示腐烂橘子。每分钟，腐烂橘子会让上下左右相邻的新鲜橘子也腐烂；如果最终还有新鲜橘子无法被感染，就返回 <code>-1</code>。</p>
+
+                    <div class="exercise-case-values" aria-label="网格数值含义">
+                      <span><strong>0</strong> 空单元格</span>
+                      <span><strong>1</strong> 新鲜橘子</span>
+                      <span><strong>2</strong> 腐烂橘子</span>
+                    </div>
+
+                    <div class="exercise-case-meta">
+                      <article class="exercise-case-block">
+                        <p class="mini-label">示例输入</p>
+                        <p class="exercise-case-code">grid = [[2,1,1],[1,1,0],[0,1,1]]</p>
+                      </article>
+                      <article class="exercise-case-block">
+                        <p class="mini-label">脚本提示</p>
+                        <p>先把所有一开始就腐烂的橘子一起放进队列，每处理完当前队列的一整层，就代表过去 1 分钟。</p>
+                      </article>
+                    </div>
+
+                    <section class="exercise-visualizer" aria-label="腐烂橘子可视化过程">
+                      <div class="exercise-visualizer-head">
+                        <div>
+                          <p class="mini-label">可视化过程</p>
+                          <h4>按分钟观察网格如何扩散</h4>
+                        </div>
+                        <div class="orange-metrics" aria-label="扩散过程统计">
+                          <article class="orange-metric">
+                            <span>当前分钟</span>
+                            <strong id="orangeMinuteValue">0</strong>
+                          </article>
+                          <article class="orange-metric">
+                            <span>剩余新鲜</span>
+                            <strong id="orangeFreshValue">0</strong>
+                          </article>
+                          <article class="orange-metric">
+                            <span>队列长度</span>
+                            <strong id="orangeQueueValue">0</strong>
+                          </article>
+                        </div>
+                      </div>
+
+                      <div class="orange-legend" aria-label="网格图例">
+                        <span><i class="orange-legend-dot orange-legend-empty"></i>空单元格</span>
+                        <span><i class="orange-legend-dot orange-legend-fresh"></i>新鲜橘子</span>
+                        <span><i class="orange-legend-dot orange-legend-rotten"></i>腐烂橘子</span>
+                        <span><i class="orange-legend-dot orange-legend-new"></i>本分钟新腐烂</span>
+                      </div>
+
+                      <div class="exercise-visualizer-body">
+                        <div id="orangeGrid" class="orange-grid" aria-label="腐烂橘子网格"></div>
+
+                        <aside class="orange-side-panel">
+                          <p id="orangeStatus" class="orange-status" aria-live="polite"></p>
+
+                          <div class="orange-summary-list">
+                            <article class="orange-summary-block">
+                              <p class="mini-label">当前扩散源</p>
+                              <p id="orangeFrontier"></p>
+                            </article>
+                            <article class="orange-summary-block">
+                              <p class="mini-label">本分钟新腐烂</p>
+                              <p id="orangeInfected"></p>
+                            </article>
+                            <article class="orange-summary-block">
+                              <p class="mini-label">下一轮队列</p>
+                              <p id="orangeQueue"></p>
+                            </article>
+                          </div>
+
+                          <div class="orange-controls">
+                            <button id="orangePrevBtn" type="button">上一步</button>
+                            <button id="orangePlayBtn" type="button" class="primary-btn">自动播放</button>
+                            <button id="orangeNextBtn" type="button">下一步</button>
+                            <button id="orangeResetBtn" type="button">回到起点</button>
+                          </div>
+
+                          <div id="orangeTimeline" class="orange-timeline" aria-label="扩散时间轴"></div>
+                        </aside>
+                      </div>
+                    </section>
+
+                    <p class="exercise-case-question">对于上面的示例，所有新鲜橘子全部腐烂最少需要多少分钟？</p>
+                    <div class="exercise-options">
+                      <label class="option-pill"><input type="radio" name="q7" value="a"><span>3 分钟</span></label>
+                      <label class="option-pill"><input type="radio" name="q7" value="b"><span>4 分钟</span></label>
+                      <label class="option-pill"><input type="radio" name="q7" value="c"><span>5 分钟</span></label>
+                      <label class="option-pill"><input type="radio" name="q7" value="d"><span>-1</span></label>
+                    </div>
+                  </div>
+                </div>
+
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+
               <article
                 class="exercise-card glass-card"
                 data-answer="a"
@@ -593,7 +708,7 @@
           <article class="concept-card review-card">
             <h2>课后复盘提示</h2>
             <p>建议按“简单 → 中等 → 困难”的顺序完成，逐步从记概念过渡到推流程、再到综合判断。</p>
-            <p>如果在困难层失分较多，通常说明对“首次发现锁定层级”“队列保持访问顺序”“seen 防止重复入队”还没有真正连起来理解。</p>
+            <p>如果在困难层或“腐烂的橘子”案例题失分较多，通常说明对“首次发现锁定层级”“队列保持访问顺序”“多源起点同时扩散”还没有真正连起来理解。</p>
           </article>
           <div class="exercise-actions">
             <button id="gradeQuizBtn" type="button" class="primary-btn">提交答案</button>
