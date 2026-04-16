@@ -1091,13 +1091,13 @@ function gradeExercises() {
   const unanswered = total - answered;
 
   if (unanswered > 0) {
-    exerciseResult.textContent = `当前已答 ${answered}/${total} 题，答对 ${correct} 题。还有 ${unanswered} 题未完成，补齐后会更适合做课堂测评。`;
+    exerciseResult.textContent = `当前已答 ${answered}/${total} 题，答对 ${correct} 题。还有 ${unanswered} 题未完成，建议按“简单 → 中等 → 困难”的顺序继续完成。`;
     return;
   }
 
   exerciseResult.textContent = correct === total
-    ? `本次得分 ${correct}/${total}。四题全部答对，已经可以比较扎实地解释 BFS 的最短路原理。`
-    : `本次得分 ${correct}/${total}。建议回到场景演示界面，再观察队列变化、层级扩散和父节点回溯。`;
+    ? `本次得分 ${correct}/${total}。简单、中等、困难三层题型全部通过，已经可以比较完整地解释 BFS 的层级扩散与最短路原理。`
+    : `本次得分 ${correct}/${total}。建议先回看失分最多的难度层，再结合场景演示观察队列变化、首次发现和父节点回溯。`;
 }
 
 function resetExercises() {

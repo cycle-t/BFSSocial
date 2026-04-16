@@ -109,19 +109,93 @@
               只要节点第一次被发现，它距离起点的层数就已经确定；只要目标第一次出队，最短路径也就确定了。
             </p>
           </div>
-          <div class="hero-cards">
-            <article class="hero-card">
-              <h3>核心结构</h3>
-              <p>使用队列维护“下一批要访问的人物”，保证先进先出，天然对应一层一层地扩展。</p>
-            </article>
-            <article class="hero-card contrast-card">
-              <h3>最短路依据</h3>
-              <p>无权图中，先到达的一定边数更少。BFS 按层搜索，因此第一次到达目标就是最短关系链。</p>
-            </article>
-            <article class="hero-card">
-              <h3>课堂表达</h3>
-              <p>你可以把 BFS 讲成“朋友圈扩散模型”：先朋友，再朋友的朋友，再更远的人。</p>
-            </article>
+          <div class="hero-cards hero-cards-marquee" aria-label="BFS 核心概念卡片轮播">
+            <div class="hero-cards-track">
+              <div class="hero-cards-group">
+                <article class="hero-card">
+                  <span class="hero-card-meta">01 Queue</span>
+                  <h3>核心结构</h3>
+                  <p>使用队列维护“下一批要访问的节点”，保证先进入的节点先被处理，天然形成逐层扩散。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">02 Layer</span>
+                  <h3>层级顺序</h3>
+                  <p>起点是第 0 层，所有直接邻居会成为第 1 层，再往外一圈一圈推进，顺序不会乱。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">03 Seen</span>
+                  <h3>去重机制</h3>
+                  <p>节点第一次被发现时就加入 `seen`，后续再次遇到直接跳过，避免重复搜索和环路来回。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">04 Parent</span>
+                  <h3>路径回溯</h3>
+                  <p>每个新节点都记录“我是从谁来的”，等命中目标后顺着父节点回溯，就能还原完整最短链路。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">05 Target</span>
+                  <h3>命中判定</h3>
+                  <p>在无权图里，目标第一次出队时就已经锁定最短路径，不需要再继续向更外层盲目扩散。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">06 Analogy</span>
+                  <h3>课堂比喻</h3>
+                  <p>可以把 BFS 讲成“朋友圈扩散模型”：先朋友，再朋友的朋友，最后才是更远的关系层。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">07 Complexity</span>
+                  <h3>复杂度视角</h3>
+                  <p>每个节点和每条边通常只会被有效处理一次，所以 BFS 的时间复杂度常写作 `O(V + E)`。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">08 Teaching</span>
+                  <h3>教学落点</h3>
+                  <p>学生真正要抓住的不是公式，而是“按层扩散、首次发现、父节点回溯”这三条核心逻辑。</p>
+                </article>
+              </div>
+              <div class="hero-cards-group" aria-hidden="true">
+                <article class="hero-card">
+                  <span class="hero-card-meta">01 Queue</span>
+                  <h3>核心结构</h3>
+                  <p>使用队列维护“下一批要访问的节点”，保证先进入的节点先被处理，天然形成逐层扩散。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">02 Layer</span>
+                  <h3>层级顺序</h3>
+                  <p>起点是第 0 层，所有直接邻居会成为第 1 层，再往外一圈一圈推进，顺序不会乱。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">03 Seen</span>
+                  <h3>去重机制</h3>
+                  <p>节点第一次被发现时就加入 `seen`，后续再次遇到直接跳过，避免重复搜索和环路来回。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">04 Parent</span>
+                  <h3>路径回溯</h3>
+                  <p>每个新节点都记录“我是从谁来的”，等命中目标后顺着父节点回溯，就能还原完整最短链路。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">05 Target</span>
+                  <h3>命中判定</h3>
+                  <p>在无权图里，目标第一次出队时就已经锁定最短路径，不需要再继续向更外层盲目扩散。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">06 Analogy</span>
+                  <h3>课堂比喻</h3>
+                  <p>可以把 BFS 讲成“朋友圈扩散模型”：先朋友，再朋友的朋友，最后才是更远的关系层。</p>
+                </article>
+                <article class="hero-card">
+                  <span class="hero-card-meta">07 Complexity</span>
+                  <h3>复杂度视角</h3>
+                  <p>每个节点和每条边通常只会被有效处理一次，所以 BFS 的时间复杂度常写作 `O(V + E)`。</p>
+                </article>
+                <article class="hero-card contrast-card">
+                  <span class="hero-card-meta">08 Teaching</span>
+                  <h3>教学落点</h3>
+                  <p>学生真正要抓住的不是公式，而是“按层扩散、首次发现、父节点回溯”这三条核心逻辑。</p>
+                </article>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -354,81 +428,172 @@
           </div>
         </section>
 
-        <section class="exercise-grid" aria-label="课后习题">
-          <article
-            class="exercise-card glass-card"
-            data-answer="b"
-            data-answer-text="因为 BFS 按层扩散，目标第一次出队时最短路径已经确定"
-            data-explanation="BFS 先处理所有更近层的节点，因此目标第一次出队时，对应的边数一定最少。"
-          >
-            <p class="mini-label">习题 1</p>
-            <h3>为什么 BFS 适合求无权图中的最短路径？</h3>
-            <div class="exercise-options">
-              <label class="option-pill"><input type="radio" name="q1" value="a"><span>因为 BFS 一定会访问所有节点</span></label>
-              <label class="option-pill"><input type="radio" name="q1" value="b"><span>因为 BFS 按层扩散，目标第一次出队时最短路已确定</span></label>
-              <label class="option-pill"><input type="radio" name="q1" value="c"><span>因为 BFS 使用递归调用</span></label>
-              <label class="option-pill"><input type="radio" name="q1" value="d"><span>因为 BFS 不需要记录父节点</span></label>
+        <section class="exercise-grid" aria-label="课后习题分层练习">
+          <article class="exercise-level exercise-level-easy glass-card">
+            <div class="exercise-level-head">
+              <div class="exercise-level-copy">
+                <span class="difficulty-badge">简单</span>
+                <h3>先稳住核心概念</h3>
+                <p>这一层先检查学生是否已经记住 BFS 的基础术语：起点层级、队列作用和按层推进的基本框架。</p>
+              </div>
+              <p class="exercise-level-note">建议先做这一层，建立答题信心。</p>
             </div>
-            <p class="exercise-feedback" aria-live="polite"></p>
+
+            <div class="exercise-level-grid">
+              <article
+                class="exercise-card glass-card"
+                data-answer="a"
+                data-answer-text="第 0 层"
+                data-explanation="BFS 会先把起点当作第 0 层，然后再从它向外扩展到第 1 层、第 2 层。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">简单 · 题 1</p>
+                  <span class="exercise-chip">概念辨析</span>
+                </div>
+                <h3>BFS 刚开始搜索时，起点默认属于哪一层？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q1" value="a"><span>第 0 层</span></label>
+                  <label class="option-pill"><input type="radio" name="q1" value="b"><span>第 1 层</span></label>
+                  <label class="option-pill"><input type="radio" name="q1" value="c"><span>最后一层</span></label>
+                  <label class="option-pill"><input type="radio" name="q1" value="d"><span>层级随机决定</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+
+              <article
+                class="exercise-card glass-card"
+                data-answer="b"
+                data-answer-text="队列先进先出，能保证先发现的层先被处理"
+                data-explanation="如果不用队列，就可能打乱层级顺序，失去 BFS “由近及远” 的核心优势。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">简单 · 题 2</p>
+                  <span class="exercise-chip">结构识别</span>
+                </div>
+                <h3>BFS 为什么使用队列而不是栈？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q2" value="a"><span>因为队列更容易写成递归</span></label>
+                  <label class="option-pill"><input type="radio" name="q2" value="b"><span>队列先进先出，能保证先发现的层先被处理</span></label>
+                  <label class="option-pill"><input type="radio" name="q2" value="c"><span>因为栈只能存一个节点</span></label>
+                  <label class="option-pill"><input type="radio" name="q2" value="d"><span>因为队列会自动记录最短路径</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+            </div>
           </article>
 
-          <article
-            class="exercise-card glass-card"
-            data-answer="a"
-            data-answer-text="队列先进先出，能保证先发现的层先被处理"
-            data-explanation="如果不用队列，就可能打乱层级顺序，失去 BFS 的核心优势。"
-          >
-            <p class="mini-label">习题 2</p>
-            <h3>BFS 为什么使用队列而不是栈？</h3>
-            <div class="exercise-options">
-              <label class="option-pill"><input type="radio" name="q2" value="a"><span>队列先进先出，能保证先发现的层先被处理</span></label>
-              <label class="option-pill"><input type="radio" name="q2" value="b"><span>队列更容易写成递归</span></label>
-              <label class="option-pill"><input type="radio" name="q2" value="c"><span>栈只能存一个节点</span></label>
-              <label class="option-pill"><input type="radio" name="q2" value="d"><span>队列可以自动生成最短路径</span></label>
+          <article class="exercise-level exercise-level-medium glass-card">
+            <div class="exercise-level-head">
+              <div class="exercise-level-copy">
+                <span class="difficulty-badge">中等</span>
+                <h3>再理解搜索流程</h3>
+                <p>这一层开始考查 BFS 的操作顺序，包括首次发现、父节点记录、命中目标时的停止条件。</p>
+              </div>
+              <p class="exercise-level-note">重点看“先做什么，后做什么”。</p>
             </div>
-            <p class="exercise-feedback" aria-live="polite"></p>
+
+            <div class="exercise-level-grid">
+              <article
+                class="exercise-card glass-card"
+                data-answer="c"
+                data-answer-text="标记已发现、记录父节点，并把它加入队列"
+                data-explanation="第一次遇到新邻居时，要立刻锁定它的层级来源，并把它放入队列等待后续处理。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">中等 · 题 3</p>
+                  <span class="exercise-chip">流程判断</span>
+                </div>
+                <h3>当 BFS 遍历到一个从未见过的新邻居时，最合理的做法是什么？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q3" value="a"><span>先忽略它，等所有节点出队后再处理</span></label>
+                  <label class="option-pill"><input type="radio" name="q3" value="b"><span>只记录它的名字，不加入队列</span></label>
+                  <label class="option-pill"><input type="radio" name="q3" value="c"><span>标记已发现、记录父节点，并把它加入队列</span></label>
+                  <label class="option-pill"><input type="radio" name="q3" value="d"><span>把当前节点从图里删除后继续</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+
+              <article
+                class="exercise-card glass-card"
+                data-answer="b"
+                data-answer-text="因为所有更短层级都已经先处理完，当前路径已经是最短的"
+                data-explanation="BFS 按层扩散，所以目标第一次出队时，它之前的所有更短路径可能性都已经被检查过了。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">中等 · 题 4</p>
+                  <span class="exercise-chip">原理推断</span>
+                </div>
+                <h3>为什么在无权图中，目标节点第一次出队后就可以停止搜索？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q4" value="a"><span>因为后面的节点一定都和目标无关</span></label>
+                  <label class="option-pill"><input type="radio" name="q4" value="b"><span>因为所有更短层级都已经先处理完，当前路径已经是最短的</span></label>
+                  <label class="option-pill"><input type="radio" name="q4" value="c"><span>因为 BFS 每次都会同时找到所有路径</span></label>
+                  <label class="option-pill"><input type="radio" name="q4" value="d"><span>因为目标节点不会出现在队列中第二次</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+            </div>
           </article>
 
-          <article
-            class="exercise-card glass-card"
-            data-answer="c"
-            data-answer-text="第 1 层"
-            data-explanation="起点固定为第 0 层，所有由起点直接到达的邻居都会被标记为第 1 层。"
-          >
-            <p class="mini-label">习题 3</p>
-            <h3>如果起点在第 0 层，那么第一次扩展得到的新邻居属于哪一层？</h3>
-            <div class="exercise-options">
-              <label class="option-pill"><input type="radio" name="q3" value="a"><span>第 -1 层</span></label>
-              <label class="option-pill"><input type="radio" name="q3" value="b"><span>第 0 层</span></label>
-              <label class="option-pill"><input type="radio" name="q3" value="c"><span>第 1 层</span></label>
-              <label class="option-pill"><input type="radio" name="q3" value="d"><span>层数不确定</span></label>
+          <article class="exercise-level exercise-level-hard glass-card">
+            <div class="exercise-level-head">
+              <div class="exercise-level-copy">
+                <span class="difficulty-badge">困难</span>
+                <h3>最后做综合推理</h3>
+                <p>这一层要求学生把“层级、队列、去重、访问顺序”一起用起来，而不是只记一个零散结论。</p>
+              </div>
+              <p class="exercise-level-note">适合检查是否真正掌握 BFS 思维。</p>
             </div>
-            <p class="exercise-feedback" aria-live="polite"></p>
-          </article>
 
-          <article
-            class="exercise-card glass-card"
-            data-answer="d"
-            data-answer-text="跳过它，避免重复搜索和环路回绕"
-            data-explanation="节点第一次被发现时，最短层级已经锁定；后续再遇到它时，不应重复入队。"
-          >
-            <p class="mini-label">习题 4</p>
-            <h3>当某个邻居节点已经在 `seen` 集合里时，BFS 应该怎么做？</h3>
-            <div class="exercise-options">
-              <label class="option-pill"><input type="radio" name="q4" value="a"><span>重复入队，防止漏搜</span></label>
-              <label class="option-pill"><input type="radio" name="q4" value="b"><span>把它设为新的起点</span></label>
-              <label class="option-pill"><input type="radio" name="q4" value="c"><span>删除原来的父节点</span></label>
-              <label class="option-pill"><input type="radio" name="q4" value="d"><span>跳过它，避免重复搜索和环路回绕</span></label>
+            <div class="exercise-level-grid">
+              <article
+                class="exercise-card glass-card"
+                data-answer="a"
+                data-answer-text="保留第一次发现时的父节点，并跳过这次重复入队"
+                data-explanation="节点第一次被发现时，它的最短层级就已经确定，之后再次遇到它时不应覆盖原父节点，也不应重复入队。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">困难 · 题 5</p>
+                  <span class="exercise-chip">去重策略</span>
+                </div>
+                <h3>某节点已经在较近层被发现，之后又被更远层的节点再次碰到，BFS 应该怎么处理？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q5" value="a"><span>保留第一次发现时的父节点，并跳过这次重复入队</span></label>
+                  <label class="option-pill"><input type="radio" name="q5" value="b"><span>用更晚发现的节点覆盖父节点，让路径更新</span></label>
+                  <label class="option-pill"><input type="radio" name="q5" value="c"><span>同时保留两个父节点并重复入队</span></label>
+                  <label class="option-pill"><input type="radio" name="q5" value="d"><span>把它重置为新的起点重新搜索</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
+
+              <article
+                class="exercise-card glass-card"
+                data-answer="c"
+                data-answer-text="S → A → B → C → D"
+                data-explanation="S 出队后会先把 A、B 入队；A 出队时再加入 C，此时队列是 B、C；随后 B 出队再加入 D，所以访问顺序是 S、A、B、C、D。"
+              >
+                <div class="exercise-card-head">
+                  <p class="mini-label">困难 · 题 6</p>
+                  <span class="exercise-chip">顺序推演</span>
+                </div>
+                <h3>若起点 S 的邻居依次是 A、B，且 A 发现新邻居 C、B 发现新邻居 D，那么标准 BFS 的访问顺序最可能是？</h3>
+                <div class="exercise-options">
+                  <label class="option-pill"><input type="radio" name="q6" value="a"><span>S → A → C → B → D</span></label>
+                  <label class="option-pill"><input type="radio" name="q6" value="b"><span>S → B → A → D → C</span></label>
+                  <label class="option-pill"><input type="radio" name="q6" value="c"><span>S → A → B → C → D</span></label>
+                  <label class="option-pill"><input type="radio" name="q6" value="d"><span>S → A → B → D → C</span></label>
+                </div>
+                <p class="exercise-feedback" aria-live="polite"></p>
+              </article>
             </div>
-            <p class="exercise-feedback" aria-live="polite"></p>
           </article>
         </section>
 
         <section class="exercise-summary">
           <article class="concept-card review-card">
             <h2>课后复盘提示</h2>
-            <p>做题时优先抓住 4 个关键词：队列、层级、首次发现、父节点回溯。</p>
-            <p>如果学生在第 2 题和第 4 题失分，通常说明他们对“按层扩散”和“去重机制”的理解还不够稳。</p>
+            <p>建议按“简单 → 中等 → 困难”的顺序完成，逐步从记概念过渡到推流程、再到综合判断。</p>
+            <p>如果在困难层失分较多，通常说明对“首次发现锁定层级”“队列保持访问顺序”“seen 防止重复入队”还没有真正连起来理解。</p>
           </article>
           <div class="exercise-actions">
             <button id="gradeQuizBtn" type="button" class="primary-btn">提交答案</button>
