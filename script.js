@@ -187,19 +187,6 @@ const exerciseCards = Array.from(document.querySelectorAll(".exercise-card"));
 const gradeQuizBtn = document.querySelector("#gradeQuizBtn");
 const resetExerciseBtn = document.querySelector("#resetExerciseBtn");
 const exerciseResult = document.querySelector("#exerciseResult");
-const orangeGrid = document.querySelector("#orangeGrid");
-const orangeMinuteValue = document.querySelector("#orangeMinuteValue");
-const orangeFreshValue = document.querySelector("#orangeFreshValue");
-const orangeQueueValue = document.querySelector("#orangeQueueValue");
-const orangeStatus = document.querySelector("#orangeStatus");
-const orangeFrontier = document.querySelector("#orangeFrontier");
-const orangeInfected = document.querySelector("#orangeInfected");
-const orangeQueue = document.querySelector("#orangeQueue");
-const orangePrevBtn = document.querySelector("#orangePrevBtn");
-const orangePlayBtn = document.querySelector("#orangePlayBtn");
-const orangeNextBtn = document.querySelector("#orangeNextBtn");
-const orangeResetBtn = document.querySelector("#orangeResetBtn");
-const orangeTimeline = document.querySelector("#orangeTimeline");
 
 const screenOrder = ["loading", "principle", "demo", "exercise", "feedback"];
 const loadingStages = [
@@ -208,11 +195,6 @@ const loadingStages = [
   { upTo: 60, text: "正在联调场景演示与动画画布..." },
   { upTo: 82, text: "正在同步课后习题与评分逻辑..." },
   { upTo: 100, text: "课程准备完成，可以进入学习。" }
-];
-const rottenOrangesSample = [
-  [2, 1, 1],
-  [1, 1, 0],
-  [0, 1, 1]
 ];
 
 let graphIndex = 0;
@@ -238,10 +220,6 @@ let quizMessage = "";
 let quizGood = false;
 let activeScreen = "loading";
 let loadingProgress = 0;
-let orangeScenario = null;
-let orangeStateIndex = 0;
-let orangePlaying = false;
-let orangeTimer = 0;
 
 function cloneGraph(template) {
   return {
@@ -360,10 +338,6 @@ function showScreen(name) {
 
   if (name !== "demo" && playing) {
     pausePlayback();
-  }
-
-  if (name !== "exercise" && orangePlaying) {
-    stopOrangePlayback();
   }
 
   activeScreen = name;
@@ -1084,348 +1058,6 @@ function renderCanvasHint() {
   canvasHint.textContent = "拖动节点可调整位置；单击查看详情；Shift+单击两个节点创建关系；双击空白区域添加新人物。";
 }
 
-function cloneMatrix(matrix) {
-  return matrix.map((row) => [...row]);
-}
-
-function orangeCellKey(row, col) {
-  return `${row},${col}`;
-}
-
-function formatOrangeCells(cells) {
-  return cells.length > 0
-    ? cells.map(([row, col]) => `(${row}, ${col})`).join("、")
-    : "无";
-}
-
-function buildOrangeStatus(state) {
-  if (state.isFailure) {
-    return `队列已经为空，但还剩 ${state.freshCount} 个新鲜橘子没有被感染，所以这组数据的答案是 -1。`;
-  }
-
-  if (state.minute === 0) {
-    if (state.freshCount === 0) {
-      return "第 0 分钟：网格里已经没有新鲜橘子，不需要继续扩散。";
-    }
-
-    if (state.queue.length === 0) {
-      return "第 0 分钟：没有任何初始腐烂橘子，队列为空，扩散无法开始。";
-    }
-
-    return `第 0 分钟：先把 ${state.queue.length} 个初始腐烂橘子一起放进队列，作为多源 BFS 的起点。`;
-  }
-
-  if (state.freshCount === 0) {
-    return `第 ${state.minute} 分钟：本轮新感染 ${state.infected.length} 个橘子，所有新鲜橘子都已经腐烂完成。`;
-  }
-
-  if (state.infected.length === 0) {
-    return `第 ${state.minute} 分钟：这一层没有感染到新的橘子，扩散在这里停止。`;
-  }
-
-  return `第 ${state.minute} 分钟：当前层的 ${state.sources.length} 个腐烂橘子继续向四周扩散，新感染 ${state.infected.length} 个橘子。`;
-}
-
-function buildRottenOrangesScenario(grid) {
-  const workingGrid = cloneMatrix(grid);
-  const queue = [];
-  const directions = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1]
-  ];
-  let freshCount = 0;
-
-  workingGrid.forEach((row, rowIndex) => {
-    row.forEach((value, colIndex) => {
-      if (value === 2) {
-        queue.push([rowIndex, colIndex]);
-      }
-      if (value === 1) {
-        freshCount += 1;
-      }
-    });
-  });
-
-  const states = [
-    {
-      minute: 0,
-      grid: cloneMatrix(workingGrid),
-      sources: queue.map(([row, col]) => [row, col]),
-      infected: [],
-      queue: queue.map(([row, col]) => [row, col]),
-      freshCount,
-      isFailure: false
-    }
-  ];
-
-  let minutes = 0;
-
-  while (queue.length > 0 && freshCount > 0) {
-    const layerSize = queue.length;
-    const sources = queue.slice(0, layerSize).map(([row, col]) => [row, col]);
-    const infected = [];
-
-    for (let index = 0; index < layerSize; index += 1) {
-      const [row, col] = queue.shift();
-
-      directions.forEach(([deltaRow, deltaCol]) => {
-        const nextRow = row + deltaRow;
-        const nextCol = col + deltaCol;
-
-        if (nextRow < 0 || nextRow >= workingGrid.length || nextCol < 0 || nextCol >= workingGrid[0].length) {
-          return;
-        }
-
-        if (workingGrid[nextRow][nextCol] !== 1) {
-          return;
-        }
-
-        workingGrid[nextRow][nextCol] = 2;
-        freshCount -= 1;
-        infected.push([nextRow, nextCol]);
-        queue.push([nextRow, nextCol]);
-      });
-    }
-
-    if (infected.length > 0) {
-      minutes += 1;
-      states.push({
-        minute: minutes,
-        grid: cloneMatrix(workingGrid),
-        sources,
-        infected,
-        queue: queue.map(([row, col]) => [row, col]),
-        freshCount,
-        isFailure: false
-      });
-    }
-  }
-
-  const answer = freshCount === 0 ? minutes : -1;
-  const lastState = states[states.length - 1];
-
-  if (answer === -1) {
-    states.push({
-      minute: lastState.minute + 1,
-      grid: cloneMatrix(workingGrid),
-      sources: [],
-      infected: [],
-      queue: [],
-      freshCount,
-      isFailure: true
-    });
-  }
-
-  return {
-    rows: grid.length,
-    cols: grid[0].length,
-    answer,
-    states: states.map((state) => ({
-      ...state,
-      status: buildOrangeStatus(state)
-    }))
-  };
-}
-
-function syncOrangeControls() {
-  if (!orangeScenario || !orangePlayBtn) {
-    return;
-  }
-
-  orangePrevBtn.disabled = orangeStateIndex === 0;
-  orangeNextBtn.disabled = orangeStateIndex >= orangeScenario.states.length - 1;
-  orangeResetBtn.disabled = orangeStateIndex === 0 && !orangePlaying;
-  orangePlayBtn.textContent = orangePlaying
-    ? "暂停播放"
-    : orangeStateIndex >= orangeScenario.states.length - 1
-      ? "重新播放"
-      : "自动播放";
-}
-
-function renderOrangeTimeline() {
-  if (!orangeScenario || !orangeTimeline) {
-    return;
-  }
-
-  orangeTimeline.replaceChildren();
-
-  orangeScenario.states.forEach((state, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "orange-step-btn";
-    button.textContent = state.isFailure ? "失败判定" : `第 ${state.minute} 分钟`;
-    button.classList.toggle("active", index === orangeStateIndex);
-    button.addEventListener("click", () => {
-      stopOrangePlayback();
-      orangeStateIndex = index;
-      renderOrangeState();
-    });
-    orangeTimeline.appendChild(button);
-  });
-}
-
-function renderOrangeState() {
-  if (!orangeScenario || !orangeGrid) {
-    return;
-  }
-
-  const state = orangeScenario.states[orangeStateIndex];
-  const sourceSet = new Set(state.sources.map(([row, col]) => orangeCellKey(row, col)));
-  const infectedSet = new Set(state.infected.map(([row, col]) => orangeCellKey(row, col)));
-
-  orangeGrid.style.setProperty("--orange-cols", String(orangeScenario.cols));
-  orangeGrid.replaceChildren();
-
-  state.grid.forEach((row, rowIndex) => {
-    row.forEach((value, colIndex) => {
-      const cell = document.createElement("article");
-      const key = orangeCellKey(rowIndex, colIndex);
-      const isSource = sourceSet.has(key);
-      const isNewlyRotten = infectedSet.has(key);
-      cell.className = "orange-cell";
-
-      if (value === 0) {
-        cell.classList.add("orange-cell-empty");
-      } else if (value === 1) {
-        cell.classList.add("orange-cell-fresh");
-      } else {
-        cell.classList.add("orange-cell-rotten");
-      }
-
-      if (isSource) {
-        cell.classList.add("orange-cell-source");
-      }
-
-      if (isNewlyRotten) {
-        cell.classList.add("orange-cell-newly-rotten");
-      }
-
-      const coord = document.createElement("span");
-      coord.className = "orange-cell-coord";
-      coord.textContent = `(${rowIndex}, ${colIndex})`;
-      cell.appendChild(coord);
-
-      if (value !== 0) {
-        const icon = document.createElement("img");
-        icon.src = "assets/icon/橘子.svg";
-        icon.alt = "";
-        icon.className = "orange-cell-icon";
-        cell.appendChild(icon);
-      }
-
-      const label = document.createElement("span");
-      label.className = "orange-cell-label";
-      label.textContent = value === 0
-        ? "空单元格"
-        : value === 1
-          ? "新鲜橘子"
-          : "腐烂橘子";
-      cell.appendChild(label);
-
-      if (isSource || isNewlyRotten) {
-        const badge = document.createElement("span");
-        badge.className = "orange-cell-badge";
-        badge.textContent = isNewlyRotten ? "新腐烂" : state.minute === 0 ? "起点" : "扩散源";
-        cell.appendChild(badge);
-      }
-
-      orangeGrid.appendChild(cell);
-    });
-  });
-
-  orangeMinuteValue.textContent = String(state.minute);
-  orangeFreshValue.textContent = String(state.freshCount);
-  orangeQueueValue.textContent = String(state.queue.length);
-  orangeStatus.textContent = state.status;
-  orangeFrontier.textContent = formatOrangeCells(state.sources);
-  orangeInfected.textContent = formatOrangeCells(state.infected);
-  orangeQueue.textContent = formatOrangeCells(state.queue);
-
-  renderOrangeTimeline();
-  syncOrangeControls();
-}
-
-function stopOrangePlayback() {
-  if (orangeTimer) {
-    window.clearInterval(orangeTimer);
-    orangeTimer = 0;
-  }
-
-  orangePlaying = false;
-  syncOrangeControls();
-}
-
-function startOrangePlayback() {
-  if (!orangeScenario) {
-    return;
-  }
-
-  if (orangeStateIndex >= orangeScenario.states.length - 1) {
-    orangeStateIndex = 0;
-    renderOrangeState();
-  }
-
-  if (orangePlaying) {
-    return;
-  }
-
-  orangePlaying = true;
-  syncOrangeControls();
-
-  orangeTimer = window.setInterval(() => {
-    if (orangeStateIndex >= orangeScenario.states.length - 1) {
-      stopOrangePlayback();
-      return;
-    }
-
-    orangeStateIndex += 1;
-    renderOrangeState();
-
-    if (orangeStateIndex >= orangeScenario.states.length - 1) {
-      stopOrangePlayback();
-    }
-  }, 1400);
-}
-
-function initOrangeVisualizer() {
-  if (!orangeGrid) {
-    return;
-  }
-
-  orangeScenario = buildRottenOrangesScenario(rottenOrangesSample);
-  orangeStateIndex = 0;
-  renderOrangeState();
-
-  orangePrevBtn.addEventListener("click", () => {
-    stopOrangePlayback();
-    orangeStateIndex = Math.max(0, orangeStateIndex - 1);
-    renderOrangeState();
-  });
-
-  orangePlayBtn.addEventListener("click", () => {
-    if (orangePlaying) {
-      stopOrangePlayback();
-      return;
-    }
-
-    startOrangePlayback();
-  });
-
-  orangeNextBtn.addEventListener("click", () => {
-    stopOrangePlayback();
-    orangeStateIndex = Math.min(orangeScenario.states.length - 1, orangeStateIndex + 1);
-    renderOrangeState();
-  });
-
-  orangeResetBtn.addEventListener("click", () => {
-    stopOrangePlayback();
-    orangeStateIndex = 0;
-    renderOrangeState();
-  });
-}
-
 function gradeExercises() {
   let answered = 0;
   let correct = 0;
@@ -1482,12 +1114,6 @@ function resetExercises() {
   });
 
   exerciseResult.textContent = "完成后点击“提交答案”，系统会给出即时评分和解析。";
-
-  if (orangeScenario) {
-    stopOrangePlayback();
-    orangeStateIndex = 0;
-    renderOrangeState();
-  }
 }
 
 function syncControls() {
@@ -2136,7 +1762,6 @@ speedRange.addEventListener("input", () => {
 
 window.addEventListener("resize", resizeCanvas);
 
-initOrangeVisualizer();
 showScreen(activeScreen);
 startLoadingSequence();
 resizeCanvas();
